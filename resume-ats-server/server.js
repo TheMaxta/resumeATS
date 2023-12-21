@@ -3,13 +3,16 @@ const multer = require('multer');
 const mammoth = require('mammoth');
 const cors = require('cors');
 const fs = require('fs');
+const OpenAiApi = require('./openAiApi'); // Adjust the path if necessary
+require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
+const openAiApi = new OpenAiApi(process.env.OPENAI_API_KEY); // Use API key from .env
 
 app.use(cors());
 
-app.post('/upload', upload.single('resume'), (req, res) => {
+app.post('/upload', upload.single('resume'), async (req, res) => {
     try {
         // Ensure the file is a .docx file
         if (req.file.mimetype !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
@@ -17,15 +20,26 @@ app.post('/upload', upload.single('resume'), (req, res) => {
         }
 
         mammoth.extractRawText({ path: req.file.path })
-            .then(result => {
-                let extractedText = result.value;
+            .then(async result => {
+                let resumeText = result.value;
 
                 // Job description from the request body
-                let jobDescription = req.body.jobDescription;
+                let jobDescriptionText = req.body.jobDescription;
 
-                console.log(`Resume Received: ${extractedText}`);
-                console.log(`Job Description Received: ${jobDescription}`);
-                res.send({ text: extractedText, jobDescription: jobDescription });
+                // Call OpenAI API methods
+                const technologies = await openAiApi.findTechnologies(resumeText);
+                const softSkills = await openAiApi.findSoftSkills(jobDescriptionText);
+                const hardSkills = await openAiApi.findHardSkills(jobDescriptionText);
+                const keywordsTable = await openAiApi.createKeywordsTable(jobDescriptionText);
+
+                res.send({
+                    resumeText,
+                    jobDescriptionText,
+                    technologies,
+                    softSkills,
+                    hardSkills,
+                    keywordsTable
+                });
             })
             .catch(err => {
                 console.error(err);
