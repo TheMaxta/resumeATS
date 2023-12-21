@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume ATS Extension</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+<body>
+    <h1>Resume ATS</h1>
+    <div>
+        <input type="file" id="resumeUpload" accept=".docx"/>
+    </div>
+    <div>
+        <textarea id="jobDescription" placeholder="Paste job description here"></textarea>
+    </div>
+    <div>
+        <button id="submit">Compare</button>
+    </div>
+    <div id="results"></div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

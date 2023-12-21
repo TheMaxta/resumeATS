@@ -1,0 +1,11 @@
+{
+    "manifest_version": 2,
+    "name": "Resume ATS Extension",
+    "version": "1.0",
+    "description": "Compares resumes with job descriptions.",
+    "permissions": ["activeTab", "storage"],
+    "browser_action": {
+      "default_popup": "popup.html"
+    },
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+} 
