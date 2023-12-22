@@ -48,6 +48,7 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
         // Perform comparisons
         let technologyMatchCount = comparator.compareTechnologies();
         let softSkillsMatchCount = comparator.compareSoftSkills();
+        let commonWordsInBoth = comparator.getCommonWords(resume.technologies, jobDescription.technologies);
         let uniqueTechnologiesInResume = comparator.getUniqueWords(resume.technologies, jobDescription.technologies);
         let uniqueTechnologiesInJobDescription = comparator.getUniqueWords(jobDescription.technologies, resume.technologies);
 
@@ -59,6 +60,7 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
             jobTechnologies: jobDescription.technologies,
             technologyMatchCount,
             softSkillsMatchCount,
+            commonWordsInBoth,
             uniqueTechnologiesInResume,
             uniqueTechnologiesInJobDescription
             // Include other fields as necessary

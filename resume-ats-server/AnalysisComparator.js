@@ -38,6 +38,7 @@ class AnalysisComparator {
 
         return commonWords;
     }
+
     getUniqueWords(firstKeywords, secondKeywords) {
         const firstSet = new Set(firstKeywords.split(' '));
         const secondSet = new Set(secondKeywords.split(' '));
