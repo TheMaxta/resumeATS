@@ -3,10 +3,11 @@ const multer = require('multer');
 const mammoth = require('mammoth');
 const cors = require('cors');
 const fs = require('fs');
-const OpenAiApi = require('./openAiApi'); // Adjust the path if necessary
-const DocumentAnalysis = require('./DocumentAnalysis'); // Adjust the path to your JobDescription class file
-const Resume = require('./Resume'); // Adjust the path to your Resume class file
-const JobDescription = require('./JobDescription'); // Adjust the path to your JobDescription class file
+const OpenAiApi = require('./openAiApi');
+const Resume = require('./Resume');
+const JobDescription = require('./JobDescription');
+const AnalysisComparator = require('./AnalysisComparator');
+const TextPreprocessor = require('./TextPreprocessor');
 require('dotenv').config();
 
 const app = express();
@@ -22,42 +23,55 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
             return res.status(400).send('Please upload a .docx file');
         }
 
-        mammoth.extractRawText({ path: req.file.path })
-            .then(async result => {
-                let resumeText = result.value;
-                let jobDescriptionText = req.body.jobDescription;
+        const result = await mammoth.extractRawText({ path: req.file.path });
+        let resumeText = result.value;
+        let jobDescriptionText = req.body.jobDescription;
 
-                let resume = new Resume(resumeText);
-                let jobDescription = new JobDescription(jobDescriptionText);
+        // Preprocess text
+        resumeText = TextPreprocessor.preprocess(resumeText);
+        jobDescriptionText = TextPreprocessor.preprocess(jobDescriptionText);
 
-                resume.technologies = await openAiApi.findTechnologies(resume.text);
-                jobDescription.technologies = await openAiApi.findTechnologies(jobDescription.text);
-                jobDescription.softSkills = await openAiApi.findSoftSkills(jobDescription.text);
-                jobDescription.hardSkills = await openAiApi.findHardSkills(jobDescription.text);
-                // For miscKeywords, you need to define how to retrieve them
+        // Create Resume & Job Descripton Objects
+        let resume = new Resume(resumeText);
+        let jobDescription = new JobDescription(jobDescriptionText);
 
-                res.send({
-                    resumeText: resume.text,
-                    jobDescriptionText: jobDescription.text,
-                    resumeTechnologies: resume.technologies,
-                    jobTechnologies: jobDescription.technologies,
-                    softSkills: jobDescription.softSkills,
-                    hardSkills: jobDescription.hardSkills
-                    // Add miscKeywords if needed
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                res.status(500).send('Error processing the file');
-            })
-            .finally(() => {
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error('Error deleting file:', err);
-                });
-            });
+        // Set properties using OpenAI API
+        resume.technologies = await openAiApi.findTechnologies(resume.text);
+        jobDescription.technologies = await openAiApi.findTechnologies(jobDescription.text);
+        jobDescription.softSkills = await openAiApi.findSoftSkills(jobDescription.text);
+        jobDescription.hardSkills = await openAiApi.findHardSkills(jobDescription.text);
+        // For miscKeywords, define how to retrieve them
+
+        // Instantiate AnalysisComparator
+        let comparator = new AnalysisComparator(resume, jobDescription);
+
+        // Perform comparisons
+        let technologyMatchCount = comparator.compareTechnologies();
+        let softSkillsMatchCount = comparator.compareSoftSkills();
+        let uniqueTechnologiesInResume = comparator.getUniqueWords(resume.technologies, jobDescription.technologies);
+        let uniqueTechnologiesInJobDescription = comparator.getUniqueWords(jobDescription.technologies, resume.technologies);
+
+        // Send the results in the response
+        res.send({
+            resumeText: resume.text,
+            jobDescriptionText: jobDescription.text,
+            resumeTechnologies: resume.technologies,
+            jobTechnologies: jobDescription.technologies,
+            technologyMatchCount,
+            softSkillsMatchCount,
+            uniqueTechnologiesInResume,
+            uniqueTechnologiesInJobDescription
+            // Include other fields as necessary
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).send('Error processing the file');
+    } finally {
+        // Clean up: delete the uploaded file
+        fs.unlink(req.file.path, (err) => {
+            if (err) console.error('Error deleting file:', err);
+        });
     }
 });
 
