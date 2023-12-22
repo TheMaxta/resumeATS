@@ -27,7 +27,8 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
                 let jobDescriptionText = req.body.jobDescription;
 
                 // Call OpenAI API methods
-                const technologies = await openAiApi.findTechnologies(resumeText);
+                const resume_technologies = await openAiApi.findTechnologies(resumeText);
+                const job_technologies = await openAiApi.findTechnologies(jobDescriptionText);
                 const softSkills = await openAiApi.findSoftSkills(jobDescriptionText);
                 const hardSkills = await openAiApi.findHardSkills(jobDescriptionText);
                 const keywordsTable = await openAiApi.createKeywordsTable(jobDescriptionText);
