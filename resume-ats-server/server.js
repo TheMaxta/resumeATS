@@ -4,6 +4,7 @@ const mammoth = require('mammoth');
 const cors = require('cors');
 const fs = require('fs');
 const OpenAiApi = require('./openAiApi'); // Adjust the path if necessary
+const DocumentAnalysis = require('./DocumentAnalysis'); // Adjust the path to your JobDescription class file
 const Resume = require('./Resume'); // Adjust the path to your Resume class file
 const JobDescription = require('./JobDescription'); // Adjust the path to your JobDescription class file
 require('dotenv').config();
