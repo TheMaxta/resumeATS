@@ -1,0 +1,31 @@
+body {
+    font-family: 'Arial', sans-serif;
+    width: 700px;
+}
+
+#results {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+#results h2 {
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+#results p {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Custom styling for results */
+.result-section {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
