@@ -4,17 +4,19 @@ const mammoth = require('mammoth');
 const cors = require('cors');
 const fs = require('fs');
 const OpenAiApi = require('./openAiApi'); // Adjust the path if necessary
-require('dotenv').config(); // Load environment variables from .env file
+const Resume = require('./Resume'); // Adjust the path to your Resume class file
+const JobDescription = require('./JobDescription'); // Adjust the path to your JobDescription class file
+require('dotenv').config();
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-const openAiApi = new OpenAiApi(process.env.OPENAI_API_KEY); // Use API key from .env
+const openAiApi = new OpenAiApi(process.env.OPENAI_API_KEY);
 
 app.use(cors());
+app.use(express.json()); // Add this line to handle JSON body in requests
 
 app.post('/upload', upload.single('resume'), async (req, res) => {
     try {
-        // Ensure the file is a .docx file
         if (req.file.mimetype !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
             return res.status(400).send('Please upload a .docx file');
         }
@@ -22,24 +24,25 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
         mammoth.extractRawText({ path: req.file.path })
             .then(async result => {
                 let resumeText = result.value;
-
-                // Job description from the request body
                 let jobDescriptionText = req.body.jobDescription;
 
-                // Call OpenAI API methods
-                const resume_technologies = await openAiApi.findTechnologies(resumeText);
-                const job_technologies = await openAiApi.findTechnologies(jobDescriptionText);
-                const softSkills = await openAiApi.findSoftSkills(jobDescriptionText);
-                const hardSkills = await openAiApi.findHardSkills(jobDescriptionText);
-                const keywordsTable = await openAiApi.createKeywordsTable(jobDescriptionText);
+                let resume = new Resume(resumeText);
+                let jobDescription = new JobDescription(jobDescriptionText);
+
+                resume.technologies = await openAiApi.findTechnologies(resume.text);
+                jobDescription.technologies = await openAiApi.findTechnologies(jobDescription.text);
+                jobDescription.softSkills = await openAiApi.findSoftSkills(jobDescription.text);
+                jobDescription.hardSkills = await openAiApi.findHardSkills(jobDescription.text);
+                // For miscKeywords, you need to define how to retrieve them
 
                 res.send({
-                    resumeText,
-                    jobDescriptionText,
-                    technologies,
-                    softSkills,
-                    hardSkills,
-                    keywordsTable
+                    resumeText: resume.text,
+                    jobDescriptionText: jobDescription.text,
+                    resumeTechnologies: resume.technologies,
+                    jobTechnologies: jobDescription.technologies,
+                    softSkills: jobDescription.softSkills,
+                    hardSkills: jobDescription.hardSkills
+                    // Add miscKeywords if needed
                 });
             })
             .catch(err => {
@@ -47,7 +50,6 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
                 res.status(500).send('Error processing the file');
             })
             .finally(() => {
-                // Clean up: delete the uploaded file
                 fs.unlink(req.file.path, (err) => {
                     if (err) console.error('Error deleting file:', err);
                 });
