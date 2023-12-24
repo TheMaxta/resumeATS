@@ -46,11 +46,20 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
         let comparator = new AnalysisComparator(resume, jobDescription);
 
         // Perform comparisons
+
+        // Ai Based Comparisons
         let technologyMatchCount = comparator.compareTechnologies();
         let softSkillsMatchCount = comparator.compareSoftSkills();
         let commonWordsInBoth = comparator.getCommonWords(resume.technologies, jobDescription.technologies);
         let uniqueTechnologiesInResume = comparator.getUniqueWords(resume.technologies, jobDescription.technologies);
         let uniqueTechnologiesInJobDescription = comparator.getUniqueWords(jobDescription.technologies, resume.technologies);
+
+        // Non AI Comparisons
+        let nonAiallWords = comparator.countAllWords();
+        let nonAiCommonWords = comparator.getCommonWords(resume.text, jobDescription.text);
+        let nonAiUniqueResume = comparator.getUniqueWords(resume.text, jobDescription.text);
+        let nonAiUniqueTech = comparator.getUniqueWords(jobDescription.text, resume.text);
+
 
         // Send the results in the response
         res.send({
@@ -62,8 +71,12 @@ app.post('/upload', upload.single('resume'), async (req, res) => {
             softSkillsMatchCount,
             commonWordsInBoth,
             uniqueTechnologiesInResume,
-            uniqueTechnologiesInJobDescription
-            // Include other fields as necessary
+            uniqueTechnologiesInJobDescription,
+            nonAiallWords,
+            nonAiCommonWords,
+            nonAiUniqueResume,
+            nonAiUniqueTech
+            // Include other fields as necessar
         });
 
     } catch (error) {

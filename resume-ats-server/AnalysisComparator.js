@@ -17,6 +17,9 @@ class AnalysisComparator {
 
         return count;
     }
+    countAllWords() {
+        return this.countMatchingKeywords(this.resume.text, this.jobDescription.text);
+    }
 
     compareTechnologies() {
         return this.countMatchingKeywords(this.resume.technologies, this.jobDescription.technologies);
